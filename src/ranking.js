@@ -134,8 +134,39 @@
     return Math.min(1, (state.total || 0) / target);
   }
 
+  // Combine many people's orders (best first, possibly partial) into one
+  // crowd ranking. Each person gives an item a 0..1 score by position (top =
+  // 1, bottom = 0); an item's score is the average, pulled toward 0.5 when
+  // few people have ranked it so one fan can't crown it alone.
+  const PRIOR = 2; // pretend-votes at 0.5 that every item starts with
+  function aggregate(orders, ids) {
+    const known = new Set(ids);
+    const acc = {};
+    let people = 0;
+    for (const raw of orders) {
+      const order = (raw || []).filter((id) => known.has(id));
+      const m = order.length;
+      if (m < 2) continue;
+      people += 1;
+      order.forEach((id, i) => {
+        const a = acc[id] || (acc[id] = { sum: 0, n: 0, top3: 0 });
+        a.sum += 1 - i / (m - 1);
+        a.n += 1;
+        if (i < 3) a.top3 += 1;
+      });
+    }
+    const rows = ids
+      .map((id) => {
+        const a = acc[id] || { sum: 0, n: 0, top3: 0 };
+        return { id, score: (a.sum + PRIOR * 0.5) / (a.n + PRIOR), voters: a.n, top3: a.top3 };
+      })
+      .sort((x, y) => y.score - x.score || y.voters - x.voters || x.id.localeCompare(y.id));
+    return { people, rows };
+  }
+
   return {
     BASE_RATING,
+    aggregate,
     createState,
     record,
     undo,

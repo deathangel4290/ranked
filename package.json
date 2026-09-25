@@ -5,6 +5,7 @@
   "description": "Rank completely random things, two at a time.",
   "scripts": {
     "start": "npx --yes serve .",
-    "test": "node --test"
+    "test": "node --test",
+    "bundle": "node scripts/bundle.js"
   }
 }

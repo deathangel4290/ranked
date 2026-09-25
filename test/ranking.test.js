@@ -54,6 +54,27 @@ test('pickPair works with only two items', () => {
   assert.strictEqual(Ranking.pickPair(st, ['a']), null);
 });
 
+test('aggregate combines orders and damps single votes', () => {
+  const ids = ['Pizza', 'Burger', 'Tacos', 'Sushi'];
+  const { people, rows } = Ranking.aggregate(
+    [
+      ['Pizza', 'Tacos', 'Burger'],
+      ['Pizza', 'Burger', 'Tacos'],
+      ['Tacos', 'Pizza'],
+      ['Sushi'], // too short to count
+      ['Pizza', 'Nope'], // unknown ids are ignored, leaving one item
+    ],
+    ids
+  );
+  assert.strictEqual(people, 3);
+  assert.strictEqual(rows[0].id, 'Pizza');
+  assert.strictEqual(rows[0].voters, 3);
+  assert.strictEqual(rows[0].top3, 3);
+  const sushi = rows.find((r) => r.id === 'Sushi');
+  assert.strictEqual(sushi.voters, 0);
+  assert.strictEqual(sushi.score, 0.5);
+});
+
 test('consistent picks recover the true order', () => {
   const n = 40;
   const ids = Array.from({ length: n }, (_, i) => 'item' + i); // item0 is best

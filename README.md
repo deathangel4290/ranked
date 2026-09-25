@@ -28,6 +28,11 @@ Then open the printed URL. Opening `index.html` directly also works.
 - **Rankings page** with a podium, a Top 10 / 25 / 100 / All toggle, and a "copy list" button for sharing.
 - **Undo, skip, and keyboard controls**: ← / → (or A / D) to pick, ↓ / S to skip, Z to undo.
 - Progress is saved in your browser (`localStorage`).
+- **Everyone's ranking** (when opened as a claude.ai artifact): each person's order is saved to
+  a shared database and combined into a crowd ranking. You'll see a Mine / Everyone toggle,
+  where you stand versus the crowd, and a 🌶️ when your #1 is a hot take. A plain copy of
+  the site stays fully personal and hides this.
+- Links are shareable plain anchors, like `#play.pokemon` or `#rank.movies`.
 
 ## How the ranking works
 
@@ -40,6 +45,10 @@ items. It then pairs that item with an opponent that is close in rating and that
 hasn't faced much, because close matchups tell us the most about the order. Around
 `0.7 · n · log₂ n` picks give a solid ranking. In the tests, that is enough to recover
 a hidden order with a rank correlation above 0.9.
+
+The crowd ranking (`aggregate`) scores each item 0 to 1 per person by its position in
+that person's list, then averages. Every item also starts with two pretend votes at 0.5,
+so an item one fan loves can't top the chart on its own.
 
 ## Adding categories
 
