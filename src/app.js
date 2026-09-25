@@ -367,8 +367,7 @@
       );
     });
 
-    app.querySelector('[data-act="reset"]').addEventListener('click', () => {
-      if (!confirm(`Reset your ${cat.name} ranking? This clears all ${st.total} picks.`)) return;
+    armed(app.querySelector('[data-act="reset"]'), `Tap again to clear ${st.total} picks`, () => {
       delete store.states[cat.id];
       save();
       toast('Ranking reset');
@@ -377,13 +376,31 @@
 
     const del = app.querySelector('[data-act="delete"]');
     if (del)
-      del.addEventListener('click', () => {
-        if (!confirm(`Delete "${cat.name}" and its ranking?`)) return;
+      armed(del, 'Tap again to delete', () => {
         store.custom = store.custom.filter((c) => c.id !== cat.id);
         delete store.states[cat.id];
         save();
         location.hash = '#/';
       });
+  }
+
+  // Two-tap confirmation for destructive buttons (no blocking dialogs).
+  function armed(btn, prompt, action) {
+    const label = btn.textContent;
+    let timer;
+    btn.addEventListener('click', () => {
+      if (btn.dataset.armed) {
+        clearTimeout(timer);
+        action();
+        return;
+      }
+      btn.dataset.armed = '1';
+      btn.textContent = prompt;
+      timer = setTimeout(() => {
+        delete btn.dataset.armed;
+        btn.textContent = label;
+      }, 3000);
+    });
   }
 
   function copy(text) {
